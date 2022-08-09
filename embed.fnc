@@ -3314,6 +3314,7 @@ SG   |bool   |sv_derived_from_svpvn  |NULLOK SV *sv			\
 #endif
 
 #if defined(PERL_IN_LOCALE_C)
+S	|const char *|get_LC_ALL_display
 iR	|const char *|mortalized_pv_copy|NULLOK const char * const pv
 #  ifdef USE_LOCALE
 ST	|const char *|save_to_buffer|NULLOK const char * string	\
@@ -3373,14 +3374,19 @@ S	|locale_t   |use_curlocale_scratch
 S	|const char *|setlocale_from_aggregate_LC_ALL			\
 				|NN const char * locale			\
 				|const line_t line
-#      ifdef USE_QUERYLOCALE
-S	|const char *|calculate_LC_ALL|const locale_t cur_obj
-#      else
-S	|const char *|calculate_LC_ALL|NN const char ** individ_locales
+#      ifndef USE_QUERYLOCALE
 S	|const char*|update_PL_curlocales_i|const unsigned int index	\
 				    |NN const char * new_locale		\
 				    |recalc_lc_all_t recalc_LC_ALL
 S	|const char *|find_locale_from_environment|const unsigned int index
+#      endif
+#    endif
+#    if defined(USE_POSIX_2008_LOCALE) && defined(USE_QUERYLOCALE)
+S	|const char *|calculate_LC_ALL|const locale_t cur_obj
+#    else
+:	    regen/embed.pl can't currently cope with 'elif'
+#      if defined(USE_POSIX_2008_LOCALE) || ! defined(LC_ALL)
+S	|const char *|calculate_LC_ALL|NN const char ** individ_locales
 #      endif
 #    endif
 #    ifdef WIN32
