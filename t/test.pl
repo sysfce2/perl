@@ -1013,7 +1013,7 @@ sub _num_to_alpha {
 
 my %tmpfiles;
 sub unlink_tempfiles {
-    #unlink_all keys %tmpfiles;
+    unlink_all keys %tmpfiles;
     %tempfiles = ();
 }
 
