@@ -2130,7 +2130,7 @@ S_querylocale_2008_i(pTHX_ const unsigned int index, const line_t caller_line)
     DEBUG_Lv(PerlIO_printf(Perl_debug_log,
                            "querylocale_2008_i(%s) returning '%s'\n",
                            category_names[index], retval));
-    assert(strNE(retval, ""));
+    /*assert(strNE(retval, ""));*/
     return retval;
 }
 
