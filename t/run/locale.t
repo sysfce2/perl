@@ -21,7 +21,6 @@ BEGIN {
     }
 }
 use Config;
-skip_all "MingW skipped currently" if $Config{config_args} =~ /USE_FAKE_OLD_MINGW_LOCALES/;
 
 use I18N::Langinfo qw(langinfo RADIXCHAR);
 my $have_strtod = $Config{d_strtod} eq 'define';
