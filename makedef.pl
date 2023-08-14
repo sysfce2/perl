@@ -422,7 +422,6 @@ unless ($define{'USE_ITHREADS'}) {
     ++$skip{$_} foreach qw(
                     PL_keyword_plugin_mutex
 		    PL_check_mutex
-                    PL_cur_locale_obj
 		    PL_op_mutex
 		    PL_regex_pad
 		    PL_regex_padav
@@ -470,6 +469,7 @@ unless ($define{USE_POSIX_2008_LOCALE})
     ++$skip{$_} foreach qw(
         PL_C_locale_obj
         PL_scratch_locale_obj
+        PL_cur_locale_obj
     );
 }
 unless ($define{USE_PL_CURLOCALES})
@@ -513,6 +513,7 @@ unless ($define{USE_PERL_SWITCH_LOCALE_CONTEXT})
 
 unless ($define{'MULTIPLICITY'}) {
     ++$skip{$_} foreach qw(
+                    PL_cur_locale_obj
 		    PL_my_cxt_index
 		    PL_my_cxt_list
 		    PL_my_cxt_size
