@@ -32,7 +32,7 @@ $Data::Dumper::Useqq = 1;
 $Data::Dumper::Deepcopy = 1;
 
 plan(2);
-my $debug = 1;
+my $debug = 0;
 
 my %map_category_name_to_number;
 my %map_category_number_to_name;
@@ -752,14 +752,14 @@ use Config;
 my @valid_category_numbers = sort { $a <=> $b }
                     map { $map_category_name_to_number{$_} } @valid_categories;
 
-my $use_name_value_pairs = defined $Config{d_lc_all_uses_name_value_pairs};
+my $use_name_value_pairs = defined $Config{d_perl_lc_all_uses_name_value_pairs};
 my $lc_all_separator = ($use_name_value_pairs)
                        ? ";"
-                       : $Config{lc_all_separator} =~ s/"//gr;
+                       : $Config{perl_lc_all_separator} =~ s/"//gr;
 #print STDERR __FILE__, ": ", __LINE__, ": '$lc_all_separator'\n"; 
 my @position_to_category_number;
 if (! $use_name_value_pairs) {
-    my $positions = $Config{lc_all_category_positions_init} =~ s/[{}]//gr;
+    my $positions = $Config{perl_lc_all_category_positions_init} =~ s/[{}]//gr;
     $positions =~ s/,//g;
     $positions =~ s/^ +//;
     $positions =~ s/ +$//;
