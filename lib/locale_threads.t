@@ -1760,6 +1760,9 @@ EOT
                            \%thread0_corrects);
         $this_iteration_start += $iterations_per_test_group;
 
+        # Let the other threads run
+        #threads->yield();
+
         # And repeat as long as there are other tests
     } while (threads->list(threads::all));
 
