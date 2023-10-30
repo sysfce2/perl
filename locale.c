@@ -5210,7 +5210,7 @@ Perl_get_win32_message_utf8ness(pTHX_ const char * string)
 
 #    ifdef USE_LOCALE_CTYPE
 
-    return get_locale_string_utf8ness_i(string, LOCALE_IS_UTF8,
+    return get_locale_string_utf8ness_i(string, LOCALE_UTF8NESS_UNKNOWN,
                                         NULL, LC_CTYPE_INDEX_);
 #    else
 
