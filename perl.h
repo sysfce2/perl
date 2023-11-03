@@ -1253,6 +1253,7 @@ typedef enum {
 #      define USE_THREAD_SAFE_LOCALE
 #    else
 #      define EMULATE_THREAD_SAFE_LOCALES
+#      undef USE_POSIX_2008_LOCALE
 #    endif
 #  endif
 
@@ -7205,11 +7206,16 @@ the plain locale pragma without a parameter (S<C<use locale>>) is in effect.
                         }                                                   \
                     } STMT_END
 #  endif
-
+#  ifdef EMULATE_THREAD_SAFE_LOCALES
+#    define LOCALE_TERM_THREAD_SAFE_LOCALE_EMULATION_  NOOP
+#  else
+#    define LOCALE_TERM_THREAD_SAFE_LOCALE_EMULATION_  NOOP
+#  endif
 #  define LOCALE_INIT           MUTEX_INIT(&PL_locale_mutex)
-#  define LOCALE_TERM           STMT_START {                                \
-                                    LOCALE_TERM_POSIX_2008_;                \
-                                    MUTEX_DESTROY(&PL_locale_mutex);        \
+#  define LOCALE_TERM           STMT_START {                                  \
+                                    LOCALE_TERM_POSIX_2008_;                  \
+                                    LOCALE_TERM_THREAD_SAFE_LOCALE_EMULATION_;\
+                                    MUTEX_DESTROY(&PL_locale_mutex);          \
                                 } STMT_END
 #  if 0
             /*dTHX;*/\
