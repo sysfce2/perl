@@ -37,7 +37,8 @@ my $debug = 0;
 my %map_category_name_to_number;
 my %map_category_number_to_name;
 my @valid_categories = valid_locale_categories();
-foreach my $category (@valid_categories) {
+my @platform_categories = platform_locale_categories();
+foreach my $category (@platform_categories) {
     my $cat_num = eval "&POSIX::$category";
     die "Can't determine ${category}'s number: $@" if $@;
 
@@ -519,7 +520,6 @@ $iterations_per_test_group = 1 if $iterations_per_test_group == 0;
 # LC_ALL get tested.  But skip this nicety on platforms where we are restricted from
 # using all the available categories, as it would make the code more complex
 # for not that much gain.
-my @platform_categories = platform_locale_categories();
 my $lc_all_frequency =  scalar @platform_categories == scalar @valid_categories
                         ? 3
                         : -1;
@@ -899,7 +899,7 @@ SKIP: {
     # These tests were determined by grepping through the code base for
     # locale-sensitive operations, and then figuring out something to exercise
     # them.
-    foreach my $category (@valid_categories) {
+    foreach my $category (@platform_categories) {
         no warnings 'uninitialized';
 
         print STDERR __FILE__, ": ", __LINE__, ": $category\n" if $debug > 1;
