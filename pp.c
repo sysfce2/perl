@@ -709,6 +709,45 @@ PP(pp_study)
     DEBUG_U(PerlIO_printf(Perl_debug_log, "%s:%d:%p: %llu\n", __FILE__, __LINE__, aTHX_ statex.ullAvailVirtual));
 #  else
     /*DEBUG_U(PerlIO_printf(Perl_debug_log, "%s:%d:%p: %p\n", __FILE__, __LINE__, aTHX_ sbrk((intptr_t) 0)));*/
+    struct rusage current_rusage;
+    errno = 0;
+    if (getrusage(RUSAGE_SELF, &current_rusage) != 0) {
+        DEBUG_U(PerlIO_printf(Perl_debug_log, "%s:%d: getrusage failed: %ld\n",
+                                , __FILE__, __LINE__, get_extended_os_errno()));
+    }
+    else {
+        DEBUG_U(PerlIO_printf(Perl_debug_log, "%s:%d: "
+                                  "max resident set size=%ld"
+                                "; integral shared text memory size=%ld"
+                                "; integral unshared data size=%ld"
+                                "; integral unshared stack size=%ld"
+                                "; page reclaims=%ld"
+                                "; page faults=%ld"
+                                "; swaps=%ld"
+                                "; block input operations=%ld"
+                                "; block output operations=%ld"
+                                "; messages sent=%ld"
+                                "; messages received=%ld"
+                                "; signals received=%ld"
+                                "; voluntary context switches=%ld"
+                                "; involuntary context switches=%ld\n",
+                                , __FILE__, __LINE__,
+                                ru_maxrss,
+                                ru_ixrss,
+                                ru_idrss,
+                                ru_isrss,
+                                ru_minflt,
+                                ru_majflt,
+                                ru_nswap,
+                                ru_inblock,
+                                ru_oublock,
+                                ru_msgsnd,
+                                ru_msgrcv,
+                                ru_nsignals,
+                                ru_nvcsw,
+                                ru_nivcsw));
+    }
+    
 #  endif
 #endif
     struct rusage current_rusage;
