@@ -5433,6 +5433,19 @@ S_my_localeconv(pTHX_ const int item)
 #  define P_CS_PRECEDES_ADDRESS                                       \
       &lconv_integers[(C_ARRAY_LENGTH(lconv_integers) - 2)]
 
+    /* The functions get passed an array of length two containing the data
+     * structure they are supposed to use to get the key names to fill the hash
+     * with.  One element is always for the NUMERIC strings (or NULL if none to
+     * use), and the other element similarly for the MONETARY ones. */
+#  define NUMERIC_OFFSET   0
+#  define MONETARY_OFFSET  1
+    const lconv_offset_t * strings[2] = { lconv_numeric_strings,
+                                          lconv_monetary_strings
+                                        };
+
+    HV * hv = newHV();      /* The returned hash, initially empty */
+    sv_2mortal((SV*)hv);
+
     /* If we aren't paying attention to a given category, use LC_CTYPE instead;
      * If not paying attention to that either, the code below should end up not
      * using this.  Make sure that things blow up if that avoidance gets lost,
@@ -5464,15 +5477,6 @@ S_my_localeconv(pTHX_ const int item)
      * a second call.  Assume this is the case unless overridden below */
     bool requires_2nd_localeconv = false;
 
-    /* The actual hash populating is done by S_populate_hash_from_localeconv().
-     * It gets passed an array of length two containing the data structure it
-     * is supposed to use to get the key names to fill the hash with.  One
-     * element is always for the NUMERIC strings (or NULL if none to use), and
-     * the other element similarly for the MONETARY ones. */
-#  define NUMERIC_OFFSET   0
-#  define MONETARY_OFFSET  1
-    const lconv_offset_t * strings[2] = { NULL, NULL };
-
     /* This is a mask, with one bit to tell S_populate_hash_from_localeconv to
      * populate the NUMERIC items; another bit for the MONETARY ones.  This way
      * it can choose which (or both) to populate from */
@@ -5493,7 +5497,7 @@ S_my_localeconv(pTHX_ const int item)
 
     /* The LC_MONETARY category also has some integer-valued fields, whose
      * information is kept in a separate list */
-    const lconv_offset_t * integers;
+    const lconv_offset_t * integers = lconv_integers;
 
 #  ifdef HAS_SOME_LANGINFO
 
@@ -5603,14 +5607,7 @@ S_my_localeconv(pTHX_ const int item)
             requires_2nd_localeconv = true;
         }
 
-        /* We always pass both sets of strings. 'index_bits' tells
-         * S_populate_hash_from_localeconv which to actually look at */
-        strings[NUMERIC_OFFSET] = lconv_numeric_strings;
-        strings[MONETARY_OFFSET] = lconv_monetary_strings;
 
-        /* And pass the integer values to populate; again 'index_bits' will
-         * say to use them or not */
-        integers = lconv_integers;
 
     }   /* End of call is for localeconv() */
 
@@ -5618,8 +5615,6 @@ S_my_localeconv(pTHX_ const int item)
        S_populate_hash_from_localeconv() for both cases of an individual item
        and for the entire structure.  Below is code common to both */
 
-    HV * hv = newHV();      /* The returned hash, initially empty */
-    sv_2mortal((SV*)hv);
 
     /* Call localeconv() and copy its results into the hash.  All the
      * parameters have been initialized above */
