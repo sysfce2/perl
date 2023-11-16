@@ -52,18 +52,6 @@
 #    define USE_LOCALE_NUMERIC
 #  endif
 #endif
-#ifdef LC_MONETARY
-
-    PERL_LOCALE_TABLE_ENTRY(MONETARY, NULL)
-
-#  ifdef NO_LOCALE_MONETARY
-#    define HAS_IGNORED_LOCALE_CATEGORIES_
-#    define LC_MONETARY_AVAIL_  false
-#  else
-#    define LC_MONETARY_AVAIL_  true
-#    define USE_LOCALE_MONETARY
-#  endif
-#endif
 #ifdef LC_COLLATE
 
         /* Perl outsources all its collation efforts to the libc strxfrm(), so
@@ -105,6 +93,18 @@
 #  else
 #    define LC_MESSAGES_AVAIL_  true
 #    define USE_LOCALE_MESSAGES
+#  endif
+#endif
+#ifdef LC_MONETARY
+
+    PERL_LOCALE_TABLE_ENTRY(MONETARY, NULL)
+
+#  ifdef NO_LOCALE_MONETARY
+#    define HAS_IGNORED_LOCALE_CATEGORIES_
+#    define LC_MONETARY_AVAIL_  false
+#  else
+#    define LC_MONETARY_AVAIL_  true
+#    define USE_LOCALE_MONETARY
 #  endif
 #endif
 #ifdef LC_ADDRESS
