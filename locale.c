@@ -5372,7 +5372,9 @@ S_my_localeconv(pTHX_ const int item)
         LCONV_NUMERIC_ENTRY(grouping),
 #   endif
         LCONV_NUMERIC_ENTRY(thousands_sep),
+#   define THOUSANDS_SEP_LITERAL  "thousands_sep"
         LCONV_NUMERIC_ENTRY(decimal_point),
+#   define DECIMAL_POINT_LITERAL "decimal_point"
         {NULL, 0}
     };
 
@@ -5401,6 +5403,7 @@ S_my_localeconv(pTHX_ const int item)
         LCONV_MONETARY_ENTRY(positive_sign),
         LCONV_MONETARY_ENTRY(negative_sign),
         LCONV_MONETARY_ENTRY(currency_symbol),
+#  define CURRENCY_SYMBOL_LITERAL  "currency_symbol"
         {NULL, 0}
     };
 
@@ -5425,6 +5428,7 @@ S_my_localeconv(pTHX_ const int item)
         LCONV_ENTRY(int_p_sign_posn),
         LCONV_ENTRY(int_n_sign_posn),
 #  endif
+#      define P_CS_PRECEDES_LITERAL    "p_cs_precedes"
         LCONV_ENTRY(p_cs_precedes),
         {NULL, 0}
     };
@@ -6507,7 +6511,6 @@ S_my_langinfo_i(pTHX_
      * TS_W32_BROKEN_LOCALECONV, one could use GetNumberFormat and
      * GetCurrencyFormat; patches welcome) */
 
-#      define P_CS_PRECEDES    "p_cs_precedes"
    /* case RADIXCHAR:   // May drop down to here in some configurations */
       case THOUSEP:
       case CRNCYSTR:
@@ -6533,11 +6536,12 @@ S_my_langinfo_i(pTHX_
              * with exactly both fields.  Delete this one, leaving just the
              * CRNCYSTR one in the hash */
             SV* precedes = hv_delete(result_hv,
-                                     P_CS_PRECEDES, STRLENs(P_CS_PRECEDES),
+                                     P_CS_PRECEDES_LITERAL,
+                                     STRLENs(P_CS_PRECEDES_LITERAL),
                                      0);
             if (! precedes) {
                 locale_panic_("my_localeconv() unexpectedly didn't return"
-                              " a value for " P_CS_PRECEDES);
+                              " a value for " P_CS_PRECEDES_LITERAL);
             }
 
             /* The modification is to prefix the localeconv() return with a
