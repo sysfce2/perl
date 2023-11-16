@@ -16094,7 +16094,6 @@ perl_clone_using(PerlInterpreter *proto_perl, UV flags,
 #endif
 
 #ifdef USE_LOCALE_NUMERIC
-    // SAVEPV?
     PL_numeric_name	= SAVEPV("C");
     PL_numeric_radix_sv	= newSVpvs(".");
     PL_underlying_radix_sv = newSVpvs(".");

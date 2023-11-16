@@ -7848,12 +7848,6 @@ Perl_init_i18nl10n(pTHX_ int printwarn)
     PL_underlying_radix_sv = newSV(1);
     Newxz(PL_numeric_name, 1, char);    /* Single NUL character */
 
-#  else
-
-    PL_numeric_radix_sv    = newSVpv(C_decimal_point, 0);
-    PL_underlying_radix_sv = newSVpv(C_decimal_point, 0);
-    NewCopy("C", PL_numeric_name, 2, char);
-
 #  endif
 #  ifdef USE_LOCALE_COLLATE
 
