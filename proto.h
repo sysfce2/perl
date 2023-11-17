@@ -7023,7 +7023,7 @@ S_my_localeconv(pTHX_ const int item);
 #   define PERL_ARGS_ASSERT_MY_LOCALECONV
 
 STATIC void
-S_populate_hash_from_localeconv(pTHX_ HV *hv, const char *locale, const U32 which_mask, const lconv_offset_t *strings[2], const lconv_offset_t *integers);
+S_populate_hash_from_localeconv(pTHX_ HV *hv, const char *locale, const PERL_UINT_FAST8_T which_mask, const lconv_offset_t *strings[2], const lconv_offset_t *integers);
 #   define PERL_ARGS_ASSERT_POPULATE_HASH_FROM_LOCALECONV \
         assert(hv); assert(locale); assert(strings)
 

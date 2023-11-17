@@ -5476,7 +5476,7 @@ S_my_localeconv(pTHX_ const int item)
     /* This is a mask, with one bit to tell S_populate_hash_from_localeconv to
      * populate the NUMERIC items; another bit for the MONETARY ones.  This way
      * it can choose which (or both) to populate from */
-    U32 index_bits = 0;
+    PERL_UINT_FAST8_T index_bits = 0;
 
     /* This converts from the category offset to its bit position in the above
      * mask. */
@@ -5744,7 +5744,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
 
                                       /* bit mask of which categories to
                                        * populate */
-                                      const U32 which_mask,
+                                      const PERL_UINT_FAST8_T which_mask,
 
                                       /* strings[0] points to the numeric
                                        * string fields; [1] to the monetary */
