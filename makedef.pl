@@ -186,7 +186,7 @@ if ($define{USE_LOCALE_THREADS} && ! $define{NO_THREAD_SAFE_LOCALE}) {
 }
 
 if ($define{USE_POSIX_2008_LOCALE} && $define{HAS_QUERYLOCALE})
-{   # Don't need glibc only code from perl.h
+{   # Don't need glibc only code from perl.h XXX except that fails globvar
     $define{USE_QUERYLOCALE} = 1;
 }
 

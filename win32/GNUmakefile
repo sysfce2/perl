@@ -485,6 +485,7 @@ GCCVER		:= $(shell $(GCCBIN) -dumpversion)
 GCCVER1		:= $(shell for /f "delims=. tokens=1,2,3" %%i in ('$(GCCBIN) -dumpversion') do echo %%i)
 GCCVER2		:= $(shell for /f "delims=. tokens=1,2,3" %%i in ('$(GCCBIN) -dumpversion') do echo %%j)
 GCCVER3		:= $(shell for /f "delims=. tokens=1,2,3" %%i in ('$(GCCBIN) -dumpversion') do echo %%k)
+GCCVER_STRING	:= $(shell $(GCCBIN) --version)
 endif
 
 # Set the install location of the compiler headers/libraries.
@@ -1459,7 +1460,7 @@ perllibst.h : $(HAVEMINIPERL) $(CONFIGPM) create_perllibst_h.pl
 
 perldll.def : $(HAVEMINIPERL) $(CONFIGPM) ..\embed.fnc ..\makedef.pl
 	$(MINIPERL) -I..\lib -w ..\makedef.pl PLATFORM=win32 CONFIG_H=$(CONFIG_H) $(OPTIMIZE) $(DEFINES) \
-	$(BUILDOPT) CCTYPE=$(CCTYPE) TARG_DIR=..\ > perldll.def
+	$(BUILDOPT) CCTYPE=$(CCTYPE) CRT=$(CRT) TARG_DIR=..\ > perldll.def
 
 $(PERLEXPLIB) : $(PERLIMPLIB)
 

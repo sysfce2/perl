@@ -961,6 +961,7 @@ sub which_perl {
 }
 
 sub unlink_all {
+#return;
     my $count = 0;
     foreach my $file (@_) {
         1 while unlink $file;

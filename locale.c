@@ -5318,7 +5318,13 @@ Perl_localeconv(pTHX)
 {
 
 #if  ! defined(HAS_LOCALECONV)
+    /* XXX We could define our own 'struct lconv' if localeconv is not to be
+     * used and that typedef isn't present, and then fix up localeconv to
+     * return its canned strings in this situation, then this function could
+     * always be defined and would return the C localeconv values.  But
+     * localeconv() is C89, so very likely to be present */
 
+    // XXX leaks
     return newHV();
 
 #else
@@ -5329,7 +5335,7 @@ Perl_localeconv(pTHX)
 
 }
 
-#if  defined(HAS_LOCALECONV)
+#if defined(HAS_LOCALECONV)
 
 HV *
 S_my_localeconv(pTHX_ const int item)
@@ -5521,10 +5527,8 @@ S_my_localeconv(pTHX_ const int item)
      * parameter is ignored. */
     PERL_UNUSED_ARG(item);
 
-#    else
-
-    /* This only gets compiled for the use-case of using localeconv() to
-     * emulate an nl_langinfo() missing from the platform. */
+#    else     /* This only gets compiled for the use-case of using localeconv()
+                 to emulate nl_langinfo() when missing from the platform. */
 
 #      ifdef USE_LOCALE_NUMERIC
 
@@ -5620,10 +5624,9 @@ S_my_localeconv(pTHX_ const int item)
 
 #    endif
 
-    {   /* Here, the call is for all of localeconv().  It has a bunch of
-         * items.  As in the individual item case, set up the parameters for
-         * the populate functions */
-
+    {
+        /* Here, the call is for all of localeconv().  It has a bunch of
+         * items.  The first function call always gets the MONETARY values */
         index_bits = OFFSET_TO_BIT(MONETARY_OFFSET);
 
 #    ifdef USE_LOCALE_MONETARY
@@ -5732,13 +5735,10 @@ S_my_localeconv(pTHX_ const int item)
      */
 
     for (unsigned int i = 0; i < 2; i++) {  /* Try both types of strings */
-        if (! strings[i]) {     /* Skip if no strings of this type */
-            continue;
-        }
 
-        const char * locale = locales[i];
-        if (! is_locale_utf8(locale)) {
-            continue;   /* No string can be UTF-8 if the locale isn't */
+        /* The return from this function is already adjusted */
+        if (populate[i] == S_populate_hash_from_C_localeconv) {
+            continue;
         }
 
         /* Examine each string */
@@ -5754,17 +5754,19 @@ S_my_localeconv(pTHX_ const int item)
 
             /* Determine if the string should be marked as UTF-8. */
             if (UTF8NESS_YES == (get_locale_string_utf8ness_i(SvPVX(*value),
-                                                  LOCALE_IS_UTF8,
-                                                  NULL,
-                                                  (locale_category_index) 0)))
+                                                  LOCALE_UTF8NESS_UNKNOWN,
+                                                  locales[i],
+                                                  LC_ALL_INDEX_ /* OOB */)))
             {
                 SvUTF8_on(*value);
             }
         }
     }   /* End of fixing up UTF8ness */
 
-
-    /* Examine each integer */
+    /* Examine each integer; again the C locale function returns already
+     * adjusted values */
+    if (populate[MONETARY_OFFSET] != S_populate_hash_from_C_localeconv) {
+        // XXX indent
     for (; integers; integers++) {
         const char * name = integers->name;
 
@@ -5781,6 +5783,7 @@ S_my_localeconv(pTHX_ const int item)
         if (SvIV(*value) == CHAR_MAX) {
             sv_setiv(*value, -1);
         }
+    }
     }
 
     return hv;
@@ -5881,9 +5884,6 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
     PERL_ARGS_ASSERT_POPULATE_HASH_FROM_LOCALECONV;
     PERL_UNUSED_ARG(which_mask);    /* Some configurations don't use this;
                                        complicated to figure out which */
-#    ifndef USE_LOCALE
-    PERL_UNUSED_ARG(locale);
-#    endif
 
     /* Run localeconv() and copy some or all of its results to the input 'hv'
      * hash.  Most localeconv() implementations return the values in a global
@@ -5998,7 +5998,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
         const PERL_UINT_FAST8_T i = lsbit_pos(working_mask);
         working_mask &= ~ (1 << i);
 
-        /* For each field for the given category ... */
+        /* For each string field for the given category ... */
         const lconv_offset_t * category_strings = strings[i];
         while (category_strings->name) {
 
@@ -6018,7 +6018,8 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
             category_strings++;
         }
 
-        /* Add any int fields to the HV* */
+        /* Add any int fields to the HV*.  We know only MONETARY has integers.
+         * */
         if (i == MONETARY_OFFSET && integers) {
             while (integers->name) {
                 const char value = *((const char *)(  lcbuf_as_string
@@ -6028,7 +6029,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
                 integers++;
             }
         }
-    }   /* End of loop through the fields */
+    }
 
     /* Done with copying to the hash.  Can unwind the critical section locks */
 
@@ -6672,14 +6673,14 @@ S_my_langinfo_i(pTHX_
 
             /* The modification is to prefix the localeconv() return with a
              * single byte, calculated as follows: */
-            char prefix = (LIKELY(SvIV(precedes) != -1))
+            char prefix = (LIKELY(SvIV(precedes) != CHAR_MAX))
                           ? ((precedes != 0) ?  '-' : '+')
 
                             /* khw couldn't find any documentation that
-                             * CHAR_MAX (which we modify to -1) is the signal,
-                             * but cygwin uses it thusly, and it makes sense
-                             * given that CHAR_MAX indicates the value isn't
-                             * used, so it neither precedes nor succeeds */
+                             * CHAR_MAX is the signal, but cygwin uses it
+                             * thusly, and it makes sense given that CHAR_MAX
+                             * indicates the value isn't used, so it neither
+                             * precedes nor succeeds */
                           : '.';
 
             /* Now get CRNCYSTR */
