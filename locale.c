@@ -5478,9 +5478,9 @@ S_my_localeconv(pTHX_ const int item)
      * it can choose which (or both) to populate from */
     U32 index_bits = 0;
 
-    /* This converts from a locale index to its bit position in the above mask.
-     * */
-#  define INDEX_TO_BIT(i)  (1 << (i))
+    /* This converts from the category offset to its bit position in the above
+     * mask. */
+#  define OFFSET_TO_BIT(i)  (1 << (i))
 
     /* The two categories can have disparate locales.  Initialize them to C and
      * override later whichever one(s) we pay attention to */
@@ -5541,13 +5541,13 @@ S_my_localeconv(pTHX_ const int item)
 
           case RADIXCHAR:
             locale = numeric_locale = PL_numeric_name;
-            index_bits = INDEX_TO_BIT(LC_NUMERIC_INDEX_);
+            index_bits = OFFSET_TO_BIT(NUMERIC_OFFSET);
             strings[NUMERIC_OFFSET] = DECIMAL_POINT_ADDRESS;
             integers = NULL;
             break;
 
           case THOUSEP:
-            index_bits = INDEX_TO_BIT(LC_NUMERIC_INDEX_);
+            index_bits = OFFSET_TO_BIT(NUMERIC_OFFSET);
             locale = numeric_locale = PL_numeric_name;
             strings[NUMERIC_OFFSET] = thousands_sep_string;
             integers = NULL;
@@ -5557,7 +5557,7 @@ S_my_localeconv(pTHX_ const int item)
 #    ifdef USE_LOCALE_MONETARY
 
           case CRNCYSTR:
-            index_bits = INDEX_TO_BIT(LC_MONETARY_INDEX_);
+            index_bits = OFFSET_TO_BIT(MONETARY_OFFSET);
             locale = monetary_locale = querylocale_i(LC_MONETARY_INDEX_);
 
             /* This item needs the values for both the currency symbol, and
@@ -5591,13 +5591,13 @@ S_my_localeconv(pTHX_ const int item)
 
         /* The first call to S_populate_hash_from_localeconv() will be for the
          * MONETARY values */
-        index_bits = INDEX_TO_BIT(monetary_index);
+        index_bits = OFFSET_TO_BIT(MONETARY_OFFSET);
         locale = monetary_locale;
 
         /* And if the locales for the two categories are the same, we can also
          * do the NUMERIC values in the same call */
         if (strEQ(numeric_locale, monetary_locale)) {
-            index_bits |= INDEX_TO_BIT(numeric_index);
+            index_bits |= OFFSET_TO_BIT(NUMERIC_OFFSET);
         }
         else {
             requires_2nd_localeconv = true;
@@ -5636,7 +5636,7 @@ S_my_localeconv(pTHX_ const int item)
     if (requires_2nd_localeconv) {
         populate_hash_from_localeconv(hv,
                                       numeric_locale,
-                                      INDEX_TO_BIT(numeric_index),
+                                      OFFSET_TO_BIT(NUMERIC_OFFSET),
                                       strings,
                                       NULL      /* There are no NUMERIC integer
                                                    fields */
@@ -5781,7 +5781,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
     /* We need to toggle to the underlying NUMERIC locale if we are getting
      * NUMERIC strings */
     const char * orig_NUMERIC_locale = NULL;
-    if (which_mask & INDEX_TO_BIT(LC_NUMERIC_INDEX_)) {
+    if (which_mask & OFFSET_TO_BIT(NUMERIC_OFFSET)) {
         LC_NUMERIC_LOCK(0);
 
 #    if defined(WIN32)
@@ -5814,7 +5814,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
     /* Same Windows bug as described just above for NUMERIC.  Otherwise, no
      * need to toggle LC_MONETARY, as it is kept in the underlying locale */
     const char * orig_MONETARY_locale = NULL;
-    if (which_mask & INDEX_TO_BIT(LC_MONETARY_INDEX_)) {
+    if (which_mask & OFFSET_TO_BIT(MONETARY_OFFSET)) {
         orig_MONETARY_locale = toggle_locale_i(LC_MONETARY_INDEX_, "C");
         toggle_locale_i(LC_MONETARY_INDEX_, locale);
     }
@@ -5880,7 +5880,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
 
 #  ifdef USE_LOCALE_NUMERIC
 
-            && (which_mask & INDEX_TO_BIT(LC_NUMERIC_INDEX_)) == 0
+            && (which_mask & OFFSET_TO_BIT(NUMERIC_OFFSET)) == 0
 
 #  endif
 
@@ -5894,7 +5894,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
 
 #  ifdef USE_LOCALE_MONETARY
 
-            && (which_mask & INDEX_TO_BIT(LC_MONETARY_INDEX_)) == 0
+            && (which_mask & OFFSET_TO_BIT(MONETARY_OFFSET)) == 0
 
 #  endif
         ) {
@@ -5965,7 +5965,7 @@ S_populate_hash_from_localeconv(pTHX_ HV * hv,
 #  ifdef USE_LOCALE_NUMERIC
 
     restore_toggled_locale_i(LC_NUMERIC_INDEX_, orig_NUMERIC_locale);
-    if (which_mask & INDEX_TO_BIT(LC_NUMERIC_INDEX_)) {
+    if (which_mask & OFFSET_TO_BIT(NUMERIC_OFFSET)) {
         LC_NUMERIC_UNLOCK;
     }
 
