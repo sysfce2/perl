@@ -418,6 +418,16 @@ static int debug_initialization = 0;
 #  error Revert the commit that added this line
 #endif
 
+#define wrap_uselocale(a)   \
+    ({  \
+       locale_t obj = uselocale(a); \
+       DEBUG_U(PerlIO_printf(Perl_debug_log, "uselocale returns 0x%p\n", a));   \
+       if (a == 0 && obj != PL_cur_locale_obj)  \
+        DEBUG_U(PerlIO_printf(Perl_debug_log, "PL_cur_locale_obj = 0x%p\n", \
+                                              PL_cur_locale_obj));  \
+        obj;\
+    })
+            
 #ifdef WIN32_USE_FAKE_OLD_MINGW_LOCALES
 
    /* Use -Accflags=-DWIN32_USE_FAKE_OLD_MINGW_LOCALES on a POSIX or *nix box
@@ -1051,7 +1061,7 @@ S_use_curlocale_scratch(pTHX)
      * creates a proper P2008 object.  Any prior object is deleted, as is any
      * remaining object during global destruction. */
 
-    locale_t cur = uselocale((locale_t) 0);
+    locale_t cur = wrap_uselocale((locale_t) 0);
 
     if (cur != LC_GLOBAL_LOCALE) {
         return cur;
@@ -2398,7 +2408,7 @@ S_querylocale_2008_i(pTHX_ const locale_category_index index,
      *      find_locale_from_environment() give details on the potential race.)
      */
 
-    const locale_t cur_obj = uselocale((locale_t) 0);
+    const locale_t cur_obj = wrap_uselocale((locale_t) 0);
     const char * retval;
 
 #  ifdef MULTIPLICITY
@@ -2606,7 +2616,7 @@ S_bool_setlocale_2008_i(pTHX_
      */
 
     int mask = category_masks[index];
-    const locale_t entry_obj = uselocale((locale_t) 0);
+    const locale_t entry_obj = wrap_uselocale((locale_t) 0);
 
 #  ifdef MULTIPLICITY
     assert(entry_obj== LC_GLOBAL_LOCALE || entry_obj == PL_cur_locale_obj);
@@ -2718,7 +2728,7 @@ S_bool_setlocale_2008_i(pTHX_
      * the C library's discretion), hence we can't be using that locale at the
      * time of the switch (this wasn't obvious to khw from the man pages).  So
      * switch to a known locale object that we don't otherwise mess with. */
-    if (! uselocale(PL_C_locale_obj)) {
+    if (! wrap_uselocale(PL_C_locale_obj)) {
 
         /* Not being able to change to the C locale is severe; don't keep
          * going.  */
@@ -2918,7 +2928,7 @@ S_bool_setlocale_2008_i(pTHX_
 
     /* Here, successfully created an object representing the desired locale;
      * now switch into it */
-    if (! uselocale(new_obj)) {
+    if (! wrap_uselocale(new_obj)) {
         freelocale(new_obj);
         locale_panic_(Perl_form(aTHX_ "(called from %" LINE_Tf "):"
                                       " bool_setlocale_2008_i: switching"
@@ -2965,7 +2975,7 @@ S_bool_setlocale_2008_i(pTHX_
 
     /* We earlier switched to the LC_ALL => C locale in anticipation of it
      * succeeding,  Now have to switch back to the state upon entry.  */
-    if (! uselocale(entry_obj)) {
+    if (! wrap_uselocale(entry_obj)) {
         setlocale_failure_panic_i(index, "switching back to",
                                   locale_on_entry, __LINE__, caller_line);
     }
@@ -7812,7 +7822,7 @@ Perl_init_i18nl10n(pTHX_ int printwarn)
      * anyway, but deferring it can lead to leaks of memory that would also get
      * malloc'd in the interim.  We arbitrarily switch to the C locale,
      * overridden below  */
-    if (! uselocale(PL_C_locale_obj)) {
+    if (! wrap_uselocale(PL_C_locale_obj)) {
         locale_panic_(Perl_form(aTHX_
                                 "Can't uselocale(%p), LC_ALL supposed to"
                                 " be 'C'",
@@ -8210,7 +8220,7 @@ Perl_init_i18nl10n(pTHX_ int printwarn)
     DEBUG_Lv(PerlIO_printf(Perl_debug_log,
                            "finished Perl_init_i18nl10n; actual obj=%p,"
                            " expected obj=%p, initial=%s\n",
-                           uselocale(0), PL_cur_locale_obj,
+                           wrap_uselocale(0), PL_cur_locale_obj,
                            get_LC_ALL_display()));
 #  endif
 
@@ -9532,7 +9542,7 @@ handle all cases of single- vs multi-thread, POSIX 2008-supported or not.
 #elif defined(USE_POSIX_2008_LOCALE)
 #  define CHANGE_SYSTEM_LOCALE_TO_GLOBAL                                \
     STMT_START {                                                        \
-        locale_t old_locale = uselocale(LC_GLOBAL_LOCALE);              \
+        locale_t old_locale = wrap_uselocale(LC_GLOBAL_LOCALE);              \
         if (! old_locale) {                                             \
             locale_panic_("Could not change to global locale");         \
         }                                                               \
@@ -9564,7 +9574,7 @@ Perl_switch_to_global_locale(pTHX)
     * global locale or not. */
 #  ifdef USE_POSIX_2008_LOCALE
 
-    const bool perl_controls = (LC_GLOBAL_LOCALE != uselocale((locale_t) 0));
+    const bool perl_controls = (LC_GLOBAL_LOCALE != wrap_uselocale((locale_t) 0));
 
 #  elif defined(USE_THREAD_SAFE_LOCALE) && defined(WIN32)
 
@@ -9708,7 +9718,7 @@ Perl_sync_locale(pTHX)
 
 #    elif defined(USE_POSIX_2008_LOCALE)    /* Thread-safe POSIX 2008 */
 
-    was_in_global = (LC_GLOBAL_LOCALE == uselocale(LC_GLOBAL_LOCALE));
+    was_in_global = (LC_GLOBAL_LOCALE == wrap_uselocale(LC_GLOBAL_LOCALE));
 
 #    else
 #      error Unexpected Configuration
@@ -9853,7 +9863,7 @@ Perl_switch_locale_context(pTHX)
 
 #  ifdef USE_POSIX_2008_LOCALE
 
-    if (! uselocale(PL_cur_locale_obj)) {
+    if (! wrap_uselocale(PL_cur_locale_obj)) {
         locale_panic_(Perl_form(aTHX_
                                 "Can't uselocale(%p), LC_ALL supposed to"
                                 " be '%s'",
@@ -9904,7 +9914,7 @@ Perl_thread_locale_init(pTHX)
                            " calling setlocale(LC_ALL, \"C\")\n",
                            get_LC_ALL_display()));
 
-    if (! uselocale(PL_C_locale_obj)) {
+    if (! wrap_uselocale(PL_C_locale_obj)) {
 
         /* Not being able to change to the C locale is severe; don't keep
          * going.  */
@@ -9949,7 +9959,7 @@ Perl_thread_locale_term(pTHX)
 #if defined(USE_POSIX_2008_LOCALE) && defined(USE_THREADS)
 
     /* Switch to the global locale, so can free up the per-thread object */
-    locale_t actual_obj = uselocale(LC_GLOBAL_LOCALE);
+    locale_t actual_obj = wrap_uselocale(LC_GLOBAL_LOCALE);
     if (actual_obj != LC_GLOBAL_LOCALE && actual_obj != PL_C_locale_obj) {
         freelocale(actual_obj);
     }
