@@ -491,8 +491,8 @@ S_wsetlocale(const int category, const wchar_t * wlocale)
     Size_t string_size = wcslen(wresult) + 1;
 
     if (wsetlocale_buf_size == 0) {
-        Newx(wsetlocale_buf, string_size, wchar_t);
-        wsetlocale_buf_size = string_size;
+        Newx(wsetlocale_buf, 4096, wchar_t);
+        wsetlocale_buf_size = 4096;
 
 #  ifdef MULTIPLICITY
 
@@ -4568,6 +4568,7 @@ STATIC const char *
 S_wrap_wsetlocale(pTHX_ const int category, const char *locale)
 {
     PERL_ARGS_ASSERT_WRAP_WSETLOCALE;
+    DEBUG_L(PerlIO_printf(Perl_debug_log, "Entering wrap_wsetlocale, cat=%d locale=%s\n", category, locale));
 
     /* Calls _wsetlocale(), converting the parameters/return to/from
      * Perl-expected forms as if plain setlocale() were being called instead.
